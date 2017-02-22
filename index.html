@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>apmjs</title>
+        <script src="dist/apm.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.2/angular.min.js"></script>
+        <style type="text/css">
+            #background {
+                width: 500px;
+                height: 500px;
+                /*background-image: url(https://scontent-nrt1-1.cdninstagram.com/t51.2885-15/e35/14592116_193605404425609_7092672073075523584_n.jpg?ig_cache_key=MTM4MDg5MzIyNzM3NjU1MzM1MQ%3D%3D.2)*/
+            }
+        </style>
+    </head>
+    <body>
+        <img src="https://ig-s-a-a.akamaihd.net/hphotos-ak-xpa1/t51.2885-15/sh0.08/e35/p750x750/16464189_1268772176551716_6184072952787501056_n.jpg">
+        <img src="https://ig-s-c-a.akamaihd.net/hphotos-ak-xpa1/t51.2885-15/sh0.08/e35/p750x750/16583199_386276281730082_5151767165078077440_n.jpg">
+        <img src="https://ig-s-b-a.akamaihd.net/hphotos-ak-xpa1/t51.2885-15/e35/16122478_734728216702477_6925535843113238528_n.jpg">
+        <button type="button" id="test">test</button>
+        <button type="button" id="notdefined">notdefined</button>
+        <button type="button" id="stackoverflow">stackoverflow</button>
+        <button type="button" id="setStorage">setStorage</button>
+        <button type="button" id="showStorage">showStorage</button>
+        <button type="button" id="clearStorage">clearStorage</button>
+        <button type="button" id="sendRequest1">sendRequest1</button>
+        <button type="button" id="sendRequest2">sendRequest2</button>
+        <div id="background"></div>
+        <script type="text/javascript">
+            console.log('body');
+            var start = Date.now();
+            while(Date.now() - start < 1500) {};
+        // var apm = new Apm({
+        //     url: 'http://cq01-tdw-bfe02.cq01.baidu.com:8123/api'
+        // });
+        // var sendRequest1 = document.querySelector('#sendRequest1');
+        // sendRequest1.addEventListener('click', function () {
+        //     var xhr = new XMLHttpRequest();
+        //     xhr.open('get', 'https://api.github.com/users/SidKwok', true);
+        //     xhr.setRequestHeader('Authorization', 'token ' + '7bf2b13020e1ed2278db4bba3f5e7a53102cbc37');
+        //     xhr.addEventListener('load', function () {
+        //         console.log('request1 done');
+        //     });
+        //     xhr.send();
+        // });
+        // var sendRequest2 = document.querySelector('#sendRequest2');
+        // sendRequest2.addEventListener('click', function () {
+        //     var xhr = new XMLHttpRequest();
+        //     xhr.open('get', 'https://api.github.com/search/repositories?q=user:SidKwok&sort=updated', true);
+        //     xhr.setRequestHeader('Authorization', 'token ' + '7bf2b13020e1ed2278db4bba3f5e7a53102cbc37');
+        //     xhr.addEventListener('load', function () {
+        //         console.log('request2 done');
+        //     });
+        //     xhr.send();
+        // });
+        var clearStorage = document.querySelector('#clearStorage');
+        clearStorage.addEventListener('click', function () {
+            window.localStorage.clear();
+        });
+        var showStorage = document.querySelector('#showStorage');
+        showStorage.addEventListener('click', function () {
+            alert(JSON.stringify(window.localStorage));
+        });
+        var setStorage = document.querySelector('#setStorage');
+        setStorage.addEventListener('click', function () {
+            window.localStorage.setItem('a', '23123123');
+        });
+        var test = document.querySelector('#test');
+        test.addEventListener('click', function () {
+            apm.report({hey: 1, yo: 2})
+        });
+        var btnNotdefined = document.querySelector('#notdefined');
+        btnNotdefined.addEventListener('click', function () {
+            console.log(asd);
+        });
+        var btnStackoverflow = document.querySelector('#stackoverflow');
+        btnStackoverflow.addEventListener('click', function () {
+            var recurse = function () {
+                recurse();
+            };
+            recurse();
+        });
+        console.log('body bottom');
+        </script>
+    </body>
+</html>

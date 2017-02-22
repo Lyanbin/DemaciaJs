@@ -1,0 +1,35 @@
+{
+  "name": "apmjs",
+  "version": "1.0.0",
+  "description": "apmjs",
+  "main": "dist/apm.js",
+  "scripts": {
+    "dev": "NODE_ENV='development' rollup -c -w",
+    "build": "NODE_ENV='production' rollup -c",
+    "test": "mocha test/*.js --compilers js:buble/register",
+    "push": "git push origin HEAD:refs/for/master"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://guoxianglin@icode.baidu.com:8235/baidu/monitor/apmjs"
+  },
+  "keywords": [
+    "apm",
+    "js"
+  ],
+  "author": "guoxianglin@baidu.com",
+  "license": "MIT",
+  "devDependencies": {
+    "buble": "^0.15.1",
+    "express": "^4.14.0",
+    "mocha": "^3.2.0",
+    "rollup": "^0.38.0",
+    "rollup-plugin-alias": "^1.2.0",
+    "rollup-plugin-buble": "^0.15.0",
+    "rollup-plugin-cleanup": "^0.1.4",
+    "rollup-plugin-eslint": "^3.0.0",
+    "rollup-plugin-filesize": "^1.0.1",
+    "rollup-plugin-uglify": "^1.0.1",
+    "rollup-watch": "^2.5.0"
+  }
+}
