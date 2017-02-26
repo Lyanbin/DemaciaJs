@@ -84,54 +84,6 @@ Event.prototype.remove = function remove (name, handler) {
     }
 };
 
-var Xhr = (function (Event$$1) {
-    function Xhr() {
-        Event$$1.call(this);
-        this.msg = [];
-        this.count = 0;
-        this.currentCount = 0;
-        var self = this;
-        var open = window.XMLHttpRequest.prototype.open;
-        window.XMLHttpRequest.prototype.open = function (method, url, async, user, pass) {
-            var start = new Date();
-            self.count++;
-            this.addEventListener('load', function () {
-                var responseTime = new Date() - start;
-                var status = this.status;
-                var length = self.msg.length;
-                var headers = this.getAllResponseHeaders();
-                self.currentCount++;
-                for (var i = 0; i < length; i++) {
-                    if (self.msg[i].method === method
-                    && self.msg[i].url === url
-                    && self.msg[i].status === status) {
-                        self.msg[i].times++;
-                        self.msg[i].responseTime += responseTime;
-                        break;
-                    } else if (i === (length - 1)) {
-                        self.msg.push({
-                            method: method, url: url, status: status, times: 1, responseTime: responseTime, headers: headers
-                        });
-                    }
-                }
-                if (!length) {
-                    self.msg.push({
-                        method: method, url: url, status: status, times: 1, responseTime: responseTime, headers: headers
-                    });
-                }
-                if (self.currentCount === self.count) {
-                    self.emit('xhr_done', self.msg);
-                }
-            });
-            open.call(this, method, url, async, user, pass);
-        };
-    }
-    if ( Event$$1 ) Xhr.__proto__ = Event$$1;
-    Xhr.prototype = Object.create( Event$$1 && Event$$1.prototype );
-    Xhr.prototype.constructor = Xhr;
-    return Xhr;
-}(Event));
-
 function obj2str(obj) {
     var keys = Object.keys(obj);
     var str = '';
@@ -141,6 +93,7 @@ function obj2str(obj) {
     }
     return str;
 }
+
 var hasStorage = (window.localStorage !== 'undefined');
 
 function eventListener(obj, event, func, useCapture) {
@@ -156,6 +109,73 @@ function eventListener(obj, event, func, useCapture) {
 function returnPerfTime(obj, key, navStart) {
     return obj[key] > 0 ? obj[key] - navStart : 0;
 }
+
+var Xhr = (function (Event$$1) {
+    function Xhr(xhrOpt) {
+        if ( xhrOpt === void 0 ) xhrOpt = {
+        maxNum: 5,
+        maxDur: 1e4
+    };
+        Event$$1.call(this);
+        this.xhrOpt = xhrOpt;
+        this.msg = [];
+        this.count = 0;
+        this.lastSentTime = 0;
+        var self = this;
+        var open = window.XMLHttpRequest.prototype.open;
+        window.XMLHttpRequest.prototype.open = function (method, url, async, user, pass) {
+            var start = Date.now();
+            var tempData = {};
+            tempData.method = method;
+            tempData.url = url;
+            self.count++;
+            eventListener(this, 'load', function () {
+                tempData.responseTime = Date.now() - start;
+                tempData.status = this.status;
+                tempData.errCode = 0;
+                tempData.responseSize = self.dataSize(this.response);
+            });
+            eventListener(this, 'loadstart', function () {
+                start = Date.now();
+            });
+            eventListener(this, 'error', function () {
+                tempData.responseTime = Date.now() - start;
+                tempData.status = this.status;
+                tempData.errCode = 990;
+            });
+            eventListener(this, 'abort', function () {
+                tempData.responseTime = Date.now() - start;
+                tempData.status = this.status;
+                tempData.errCode = 905;
+            });
+            eventListener(this, 'timeout', function () {
+                tempData.responseTime = Date.now() - start;
+                tempData.status = this.status;
+                tempData.errCode = 903;
+            });
+            eventListener(this, 'loadend', function () {
+                console.log('loadend');
+                console.log(self);
+                self.msg.push(tempData);
+                if (Date.now() - self.lastSentTime > self.xhrOpt.maxDur || self.msg.length > self.xhrOpt.maxNum) {
+                    console.log(self.msg);
+                    self.lastSentTime = Date.now();
+                }
+            });
+            open.call(this, method, url, async, user, pass);
+        };
+    }
+    if ( Event$$1 ) Xhr.__proto__ = Event$$1;
+    Xhr.prototype = Object.create( Event$$1 && Event$$1.prototype );
+    Xhr.prototype.constructor = Xhr;
+    Xhr.prototype.dataSize = function dataSize (response) {
+        return "string" == typeof response ? response.replace(/[^\u0000-\u00ff]/g,"aa").length :
+                window.ArrayBuffer && response instanceof ArrayBuffer ? response.byteLength :
+                            window.Blob && response instanceof Blob ? response.size :
+                                    response && response.length ? response.length : 0;
+    };
+    return Xhr;
+}(Event));
 
 var Perf = function Perf(timeObj) {
     if ( timeObj === void 0 ) timeObj = {
@@ -312,7 +332,7 @@ Report.prototype.get = function get (url) {
     img.setAttribute('src', url);
     img.setAttribute('style', 'display:none');
     img.onload = function () {
-        console.log('成功发送');
+        alert('成功发送');
     };
     img.onerror = function () {
         alert('没成功发送');
@@ -320,6 +340,8 @@ Report.prototype.get = function get (url) {
     img.src = url;
 };
 Report.prototype.post = function post () {
+};
+Report.prototype.ftp = function ftp () {
 };
 
 var Apm = function Apm(options) {
@@ -382,7 +404,7 @@ var Apm = function Apm(options) {
             console.log(perfData);
         }).then(function () {
             var perfReport = new Report();
-            perfReport.get('https://iiig-s-a-a.akamaihd.net/hphotos-ak-xpa1/t51.2885-15/e35/14583492_1771631776496488_3767788261171265536_n.jpg');
+            perfReport.get('https://content.nike.com/content/dam/one-nike/en_us/season-2016-sp/Shop/Launch/01-2016/air-jordan-4-retro-alternate-89/Air-Jordan-4-Alternate-89-Pair.jpg.transform/default/Air-Jordan-4-Alternate-89-Pair.jpg');
         });
     });
 };
