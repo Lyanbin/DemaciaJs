@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <title>apmjs</title>
-        <script src="dist/apm.js"></script>
+        <script src="http://localhost:3000/apm.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.2/angular.min.js"></script>
         <style type="text/css">
             #background {
@@ -14,9 +14,12 @@
         </style>
     </head>
     <body>
-        <img src="https://content.nike.com/content/dam/one-nike/en_lu/SP17/Launch/March/AIR-JORDAN-15-RETRO-OBSIDIAN-TOP.jpg.transform/default/AIR-JORDAN-15-RETRO-OBSIDIAN-TOP.jpg">
-        <img src="https://content.nike.com/content/dam/one-nike/en_us/season-2016-ho/SHOP/LAUNCH/AIR-JORDAN-3-RETRO-OG-WHITE-CEMENT-GREY-BLUE/AIR-JORDAN-3-RETRO-OG-WHITE-CEMENT-GREY-BLUE-MAIN.jpg.transform/default/AIR-JORDAN-3-RETRO-OG-WHITE-CEMENT-GREY-BLUE-MAIN.jpg">
-        <img src="https://content.nike.com/content/dam/one-nike/en_us/season-2016-ho/SHOP/LAUNCH/AIR-JORDAN-3-RETRO-BLACK-WHITE/WE-CEE-GE/AIR-JORDAN-3-RETRO-BLACK-WHITE-MAIN.jpg.transform/default/AIR-JORDAN-3-RETRO-BLACK-WHITE-MAIN.jpg">
+        <h1>哈哈哈，我是占位符，TEST</h1>
+        <h2>哈哈哈，我是占位符，TEST</h2>
+        <h3>哈哈哈，我是占位符，TEST</h3>
+        <h4>哈哈哈，我是占位符，TEST</h4>
+        <h5>哈哈哈，我是占位符，TEST</h5>
+        <input type="file" id="file">
         <button type="button" id="test">test</button>
         <button type="button" id="notdefined">notdefined</button>
         <button type="button" id="stackoverflow">stackoverflow</button>
@@ -24,8 +27,11 @@
         <button type="button" id="showStorage">showStorage</button>
         <button type="button" id="clearStorage">clearStorage</button>
         <button type="button" id="sendRequest1">sendRequest1</button>
-        <button type="button" id="sendRequest2">sendRequest2</button>
-        <div id="background"></div>
+        <button type="button" id="sendRequest2">上传</button>
+        <img src="https://content.nike.com/content/dam/one-nike/en_lu/SP17/Launch/March/AIR-JORDAN-15-RETRO-OBSIDIAN-TOP.jpg.transform/default/AIR-JORDAN-15-RETRO-OBSIDIAN-TOP.jpg">
+        <img src="https://content.nike.com/content/dam/one-nike/en_us/season-2016-ho/SHOP/LAUNCH/AIR-JORDAN-3-RETRO-OG-WHITE-CEMENT-GREY-BLUE/AIR-JORDAN-3-RETRO-OG-WHITE-CEMENT-GREY-BLUE-MAIN.jpg.transform/default/AIR-JORDAN-3-RETRO-OG-WHITE-CEMENT-GREY-BLUE-MAIN.jpg">
+        <img src="https://content.nike.com/content/dam/one-nike/en_us/season-2016-ho/SHOP/LAUNCH/AIR-JORDAN-3-RETRO-BLACK-WHITE/WE-CEE-GE/AIR-JORDAN-3-RETRO-BLACK-WHITE-MAIN.jpg.transform/default/AIR-JORDAN-3-RETRO-BLACK-WHITE-MAIN.jpg">
+        <div id="background">123123</div>
         <script type="text/javascript">
             console.log('body');
             var start = Date.now();
@@ -37,7 +43,7 @@
         var sendRequest1 = document.querySelector('#sendRequest1');
         sendRequest1.addEventListener('click', function () {
             var xhr = new XMLHttpRequest();
-            xhr.open('get', 'https://aapi.github.com/users/Lyanbin', true);
+            xhr.open('get', 'https://api.github.com/users/Lyanbin', true);
             xhr.addEventListener('load', function () {
                 console.log('lyb api has done');
             });
@@ -47,12 +53,21 @@
         var sendRequest2 = document.querySelector('#sendRequest2');
         sendRequest2.addEventListener('click', function () {
             var xhr = new XMLHttpRequest();
-            xhr.open('get', 'https://api.github.com/users/Lyanbin', true);
+            xhr.open('post', 'http://localhost:3000/apmpost', true);
             xhr.addEventListener('load', function () {
                 console.log('request2 done');
             });
-            xhr.send();
+            xhr.setRequestHeader('Content-Type', 'text/plain;charset=UTF-8');
+            // xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
+            var file = document.querySelector('#file').value;
+            // var data = {
+            //     data: file,
+            //     num: 1,
+            // };
+            var data = stringify({a:1});
+            xhr.send(data);
         });
+
 
         // var sendRequest1 = document.querySelector('#sendRequest1');
         // sendRequest1.addEventListener('click', function () {
@@ -102,6 +117,45 @@
             recurse();
         });
         console.log('body bottom');
+
+
+        function stringify(data) {
+            switch (typeof data) {
+                case 'object':
+                    if (!data) return 'null';
+                    if (data instanceof Array) {
+                        let arrayLength = data.length,
+                            s = '[';
+                        for (let i = 0; i < arrayLength; i++) {
+                            s += (i > 0 ? ',' : '') + stringify(data[i]);
+                        }
+                        return s + ']';
+                    }
+                    let s = '{',
+                        n = 0;
+                    for (let a in data) {
+                        if ('function' !== typeof data[a]) {
+                            let temp = stringify(data[a]);
+                            s += (n > 0 ? ',' : '') + stringify(a) + ':' + temp, n++;
+                        }
+                    }
+                    return s + '}';
+                case 'string':
+                    return '"' + data.replace(/([\"\\])/g, '\\$1').replace(/\n/g, '\\n') + '"';
+                case 'number':
+                    return data.toString();
+                case 'boolean':
+                    return data ? 'true' : 'false';
+                case 'function':
+                    return stringify(data.toString());
+                case 'undefined':
+                    return 'undefined';
+                default:
+                    return 'undefined';
+            }   
+        }
+
+
         </script>
     </body>
 </html>

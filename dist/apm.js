@@ -93,7 +93,41 @@ function obj2str(obj) {
     }
     return str;
 }
-
+function stringify(data) {
+    switch (typeof data) {
+        case 'object':
+            if (!data) { return 'null'; }
+            if (data instanceof Array) {
+                var arrayLength = data.length,
+                    s$1 = '[';
+                for (var i = 0; i < arrayLength; i++) {
+                    s$1 += (i > 0 ? ',' : '') + stringify(data[i]);
+                }
+                return s$1 + ']';
+            }
+            var s = '{',
+                n = 0;
+            for (var a in data) {
+                if ('function' !== typeof data[a]) {
+                    var temp = stringify(data[a]);
+                    s += (n > 0 ? ',' : '') + stringify(a) + ':' + temp, n++;
+                }
+            }
+            return s + '}';
+        case 'string':
+            return '"' + data.replace(/([\"\\])/g, '\\$1').replace(/\n/g, '\\n') + '"';
+        case 'number':
+            return data.toString();
+        case 'boolean':
+            return data ? 'true' : 'false';
+        case 'function':
+            return stringify(data.toString());
+        case 'undefined':
+            return 'undefined';
+        default:
+            return 'undefined';
+    }
+}
 var hasStorage = (window.localStorage !== 'undefined');
 
 function eventListener(obj, event, func, useCapture) {
@@ -122,10 +156,12 @@ var Xhr = (function (Event$$1) {
         this.count = 0;
         this.lastSentTime = 0;
         var self = this;
+        var tempData = {};
         var open = window.XMLHttpRequest.prototype.open;
+        var send = window.XMLHttpRequest.prototype.send;
         window.XMLHttpRequest.prototype.open = function (method, url, async, user, pass) {
             var start = Date.now();
-            var tempData = {};
+            tempData = {};
             tempData.method = method;
             tempData.url = url;
             self.count++;
@@ -164,15 +200,19 @@ var Xhr = (function (Event$$1) {
             });
             open.call(this, method, url, async, user, pass);
         };
+        window.XMLHttpRequest.prototype.send = function (data) {
+            tempData.requestSize = self.dataSize(data);
+            send.call(this, data);
+        };
     }
     if ( Event$$1 ) Xhr.__proto__ = Event$$1;
     Xhr.prototype = Object.create( Event$$1 && Event$$1.prototype );
     Xhr.prototype.constructor = Xhr;
     Xhr.prototype.dataSize = function dataSize (response) {
-        return "string" == typeof response ? response.replace(/[^\u0000-\u00ff]/g,"aa").length :
-                window.ArrayBuffer && response instanceof ArrayBuffer ? response.byteLength :
-                            window.Blob && response instanceof Blob ? response.size :
-                                    response && response.length ? response.length : 0;
+        return 'string' === typeof response ? response.replace(/[^\u0000-\u00ff]/g, 'aa').length
+            : window.ArrayBuffer && response instanceof ArrayBuffer ? response.byteLength
+            : window.Blob && response instanceof Blob ? response.size
+            : response && response.length ? response.length : 0;
     };
     return Xhr;
 }(Event));
@@ -323,19 +363,19 @@ Perf.prototype.setFirstPaintTime = function setFirstPaintTime (firstPaintTime) {
     this.timeObj.firstRequestAnimationFrameTime = firstPaintTime;
 };
 
-var Report = function Report() {
-};
-Report.prototype.get = function get (url) {
+var Report = function Report() {};
+Report.prototype.get = function get (url, data) {
     if (window.navigator && window.navigator.sendBeacon) {
     }
     var img = new Image();
+    var urlWithParam = url + 'perf=' + encodeURIComponent(stringify(data));
+    console.log(urlWithParam);
+    console.log(typeof urlWithParam);
     img.setAttribute('src', url);
     img.setAttribute('style', 'display:none');
     img.onload = function () {
-        alert('成功发送');
     };
     img.onerror = function () {
-        alert('没成功发送');
     };
     img.src = url;
 };
@@ -363,17 +403,14 @@ var Apm = function Apm(options) {
     this.info = info;
     this.msg = new Msg();
     this.ajaxMsg = new Msg();
-    this.src = options.url + '/apm.gif?'
-    + "appKey=" + (options.appKey) + "&"
-    + "_os=" + (this.info.os) + "&"
-    + "_browser=" + (this.info.browser) + "&"
-    + "_vn=" + (this.info.vn) + "&";
+    this.src = 'http://127.0.0.1:3000/apmget?' + "appKey=" + (options.appKey) + "&";
     this.xhr = new Xhr();
     this.xhr.on('xhr_done', function (payload) {
         console.log(payload);
         (ref = this$1.ajaxMsg).push.apply(ref, payload.map(function (e) { return JSON.stringify(e); }));
         var ref;
     });
+    this.report = new Report();
     var self = this;
     this.perf = new Perf({
         beginTime: BEGINTIME,
@@ -402,9 +439,7 @@ var Apm = function Apm(options) {
             self.perf.setFirstPaintTime(fp);
             var perfData = self.perf.getPerf();
             console.log(perfData);
-        }).then(function () {
-            var perfReport = new Report();
-            perfReport.get('https://content.nike.com/content/dam/one-nike/en_us/season-2016-sp/Shop/Launch/01-2016/air-jordan-4-retro-alternate-89/Air-Jordan-4-Alternate-89-Pair.jpg.transform/default/Air-Jordan-4-Alternate-89-Pair.jpg');
+            self.report.get(self.src, perfData);
         });
     });
 };
@@ -443,7 +478,6 @@ Apm.prototype.report = function report (msg) {
     img.src = this.src + this.msg.getMsg();
 };
 var apm = new Apm({
-    url: 'http://cq01-tdw-bfe02.cq01.baidu.com:8123/api'
 });
 
 return Apm;

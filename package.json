@@ -31,5 +31,8 @@
     "rollup-plugin-filesize": "^1.0.1",
     "rollup-plugin-uglify": "^1.0.1",
     "rollup-watch": "^2.5.0"
+  },
+  "dependencies": {
+    "body-parser": "^1.16.1"
   }
 }
