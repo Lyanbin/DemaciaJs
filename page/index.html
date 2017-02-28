@@ -53,7 +53,7 @@
         var sendRequest2 = document.querySelector('#sendRequest2');
         sendRequest2.addEventListener('click', function () {
             var xhr = new XMLHttpRequest();
-            xhr.open('post', 'http://localhost:3000/apmpost', true);
+            xhr.open('post', 'http://127.0.0.1:3000/apmpost', true);
             xhr.addEventListener('load', function () {
                 console.log('request2 done');
             });
@@ -64,7 +64,7 @@
             //     data: file,
             //     num: 1,
             // };
-            var data = stringify({a:1});
+            var data = JSON.stringify({a:1});
             xhr.send(data);
         });
 
@@ -117,43 +117,6 @@
             recurse();
         });
         console.log('body bottom');
-
-
-        function stringify(data) {
-            switch (typeof data) {
-                case 'object':
-                    if (!data) return 'null';
-                    if (data instanceof Array) {
-                        let arrayLength = data.length,
-                            s = '[';
-                        for (let i = 0; i < arrayLength; i++) {
-                            s += (i > 0 ? ',' : '') + stringify(data[i]);
-                        }
-                        return s + ']';
-                    }
-                    let s = '{',
-                        n = 0;
-                    for (let a in data) {
-                        if ('function' !== typeof data[a]) {
-                            let temp = stringify(data[a]);
-                            s += (n > 0 ? ',' : '') + stringify(a) + ':' + temp, n++;
-                        }
-                    }
-                    return s + '}';
-                case 'string':
-                    return '"' + data.replace(/([\"\\])/g, '\\$1').replace(/\n/g, '\\n') + '"';
-                case 'number':
-                    return data.toString();
-                case 'boolean':
-                    return data ? 'true' : 'false';
-                case 'function':
-                    return stringify(data.toString());
-                case 'undefined':
-                    return 'undefined';
-                default:
-                    return 'undefined';
-            }   
-        }
 
 
         </script>

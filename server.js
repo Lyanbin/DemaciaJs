@@ -24,14 +24,14 @@ app.all('*', function(req, res, next) {
     next();
 });
 
-app.get('/apmget', function (req, res) {
+app.get('/apminfo', function (req, res) {
     res.send('ohyeah');
     console.log('get something!');
     console.log(req.query);
 });
 
 // app.post('/apmpost', urlencodedParser, function (req, res) {
-app.post('/apmpost', function (req, res) {
+app.post('/apminfo', function (req, res) {
     res.send('ohpost');
     console.log('post something!');
     // console.log(req);

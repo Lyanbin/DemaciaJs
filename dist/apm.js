@@ -84,15 +84,6 @@ Event.prototype.remove = function remove (name, handler) {
     }
 };
 
-function obj2str(obj) {
-    var keys = Object.keys(obj);
-    var str = '';
-    for (var i = 0; i < keys.length; i++) {
-        var kv = (keys[i]) + "=" + (obj[keys[i]]) + (i === (keys.length - 1) ? '' : '&');
-        str += kv;
-    }
-    return str;
-}
 function stringify(data) {
     switch (typeof data) {
         case 'object':
@@ -128,7 +119,7 @@ function stringify(data) {
             return 'undefined';
     }
 }
-var hasStorage = (window.localStorage !== 'undefined');
+
 
 function eventListener(obj, event, func, useCapture) {
     if ( useCapture === void 0 ) useCapture=false;
@@ -144,6 +135,66 @@ function returnPerfTime(obj, key, navStart) {
     return obj[key] > 0 ? obj[key] - navStart : 0;
 }
 
+var Report = function Report(options) {
+    if ( options === void 0 ) options = {
+    url: '127.0.0.1:3000',
+    appKey: 'powerbylyb',
+    isWebview: false
+};
+    this.options = options;
+    this.baseUrl = this.mkurl(options);
+};
+Report.prototype.mkurl = function mkurl (options) {
+    var url = /^https/i.test(document.URL) ? 'https' : 'http';
+        url += '://' + options.url + '/apminfo?appKey=' + options.appKey;
+    if (arguments.length > 1) {
+        var otherParamObj = arguments[1];
+        for (var k in otherParamObj) {
+            url += '&' + k + '=' + otherParamObj[k];
+        }
+    }
+    return url;
+};
+Report.prototype.get = function get (data) {
+    if (window.navigator && window.navigator.sendBeacon) {
+        return navigator.sendBeacon(this.baseUrl, stringify(data));
+    }
+    var img = new Image();
+    var urlWithParam = this.baseUrl + '&perf=' + encodeURIComponent(stringify(data));
+    img.setAttribute('src', urlWithParam);
+    img.setAttribute('style', 'display:none');
+    img.onload = function () {
+        img.parentNode && img.parentNode.removeChild(img);
+    };
+    img.onerror = function () {
+        img.parentNode && img.parentNode.removeChild(img);
+    };
+    document.body.appendChild(img);
+};
+Report.prototype.post = function post (data, header, callback) {
+    if (window.navigator && window.navigator.sendBeacon) {
+    }
+    if (!window.XMLHttpRequest) {
+        return false;
+    }
+    var xhr = new XMLHttpRequest();
+    if (xhr.overrideMimeType) {
+        xhr.overrideMimeType('text/html');
+    }
+    eventListener(xhr, 'readystatechange', function () {
+        if (4 === xhr.readState && 200 === xhr.status) {
+            return callback(xhr.responseText);
+        }
+    });
+    xhr.open('POST', this.baseUrl, true);
+    for (var k in header) {
+        xhr.setRequestHeader(k, header[k]);
+    }
+    xhr.send(stringify(data));
+};
+Report.prototype.ftp = function ftp () {
+};
+
 var Xhr = (function (Event$$1) {
     function Xhr(xhrOpt) {
         if ( xhrOpt === void 0 ) xhrOpt = {
@@ -153,8 +204,8 @@ var Xhr = (function (Event$$1) {
         Event$$1.call(this);
         this.xhrOpt = xhrOpt;
         this.msg = [];
-        this.count = 0;
         this.lastSentTime = 0;
+        this.report = new Report();
         var self = this;
         var tempData = {};
         var open = window.XMLHttpRequest.prototype.open;
@@ -164,7 +215,6 @@ var Xhr = (function (Event$$1) {
             tempData = {};
             tempData.method = method;
             tempData.url = url;
-            self.count++;
             eventListener(this, 'load', function () {
                 tempData.responseTime = Date.now() - start;
                 tempData.status = this.status;
@@ -190,11 +240,19 @@ var Xhr = (function (Event$$1) {
                 tempData.errCode = 903;
             });
             eventListener(this, 'loadend', function () {
-                console.log('loadend');
-                console.log(self);
-                self.msg.push(tempData);
-                if (Date.now() - self.lastSentTime > self.xhrOpt.maxDur || self.msg.length > self.xhrOpt.maxNum) {
+                var reportXhr = new Report();
+                var reg = new RegExp(reportXhr.options.url, 'i');
+                if (!reg.test(tempData.url)) {
+                    self.msg.push(tempData);
                     console.log(self.msg);
+                } else {
+                    console.log('没进来');
+                }
+                if (self.msg.length > 0 && (Date.now() - self.lastSentTime > self.xhrOpt.maxDur || self.msg.length > self.xhrOpt.maxNum)) {
+                    console.log(self.msg.length);
+                    reportXhr.post(self.msg, {}, function () {
+                        self.msg.length = 0;
+                    });
                     self.lastSentTime = Date.now();
                 }
             });
@@ -363,32 +421,11 @@ Perf.prototype.setFirstPaintTime = function setFirstPaintTime (firstPaintTime) {
     this.timeObj.firstRequestAnimationFrameTime = firstPaintTime;
 };
 
-var Report = function Report() {};
-Report.prototype.get = function get (url, data) {
-    if (window.navigator && window.navigator.sendBeacon) {
-    }
-    var img = new Image();
-    var urlWithParam = url + 'perf=' + encodeURIComponent(stringify(data));
-    console.log(urlWithParam);
-    console.log(typeof urlWithParam);
-    img.setAttribute('src', url);
-    img.setAttribute('style', 'display:none');
-    img.onload = function () {
-    };
-    img.onerror = function () {
-    };
-    img.src = url;
-};
-Report.prototype.post = function post () {
-};
-Report.prototype.ftp = function ftp () {
-};
-
 var Apm = function Apm(options) {
     var this$1 = this;
     if ( options === void 0 ) options = {
-    url: 'http://127.0.0.1:3000',
-    appKey: '',
+    url: '127.0.0.1:3000',
+    appKey: 'powerbylyb',
     isWebview: false
 };
     console.log(123+'begin');
@@ -403,7 +440,8 @@ var Apm = function Apm(options) {
     this.info = info;
     this.msg = new Msg();
     this.ajaxMsg = new Msg();
-    this.src = 'http://127.0.0.1:3000/apmget?' + "appKey=" + (options.appKey) + "&";
+    console.log('options');
+    console.log(options);
     this.xhr = new Xhr();
     this.xhr.on('xhr_done', function (payload) {
         console.log(payload);
@@ -439,46 +477,11 @@ var Apm = function Apm(options) {
             self.perf.setFirstPaintTime(fp);
             var perfData = self.perf.getPerf();
             console.log(perfData);
-            self.report.get(self.src, perfData);
+            self.report.get(perfData);
         });
     });
 };
-Apm.prototype.report = function report (msg) {
-        var this$1 = this;
-        if ( msg === void 0 ) msg = {};
-    var img = new Image();
-    this.msg.push(obj2str(msg));
-    if (hasStorage) {
-        var s = window.localStorage;
-        if (JSON.parse(s.getItem('APM_IS_SENT') === null)) {
-            s.setItem('APM_IS_SENT', true);
-            s.setItem('APM_MSG', '');
-        }
-        if (!JSON.parse(s.getItem('APM_IS_SENT'))) {
-            this.msg.push(s.getItem('APM_MSG'));
-            s.clear();
-            s.setItem('APM_IS_SENT', true);
-            s.setItem('APM_MSG', '');
-        }
-    }
-    img.onload = function () {
-        this$1.msg.clear();
-    };
-    img.onerror = function () {
-        if (hasStorage) {
-            var s = window.localStorage;
-            var str = s.getItem('APM_MSG');
-            s.setItem('APM_IS_SENT', false);
-            if (str.indexOf(this$1.msg.getMsg()) !== -1) {
-                s.setItem('APM_MSG', this$1.msg.getMsg());
-            }
-            this$1.msg.clear();
-        }
-    };
-    img.src = this.src + this.msg.getMsg();
-};
-var apm = new Apm({
-});
+var apm = new Apm();
 
 return Apm;
 
