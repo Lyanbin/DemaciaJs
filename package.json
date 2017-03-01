@@ -1,7 +1,7 @@
 {
-  "name": "apmjs",
+  "name": "demaciajs",
   "version": "1.0.0",
-  "description": "apmjs",
+  "description": "demaciajs",
   "main": "dist/apm.js",
   "scripts": {
     "dev": "NODE_ENV='development' rollup -c -w",
@@ -11,13 +11,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "ssh://guoxianglin@icode.baidu.com:8235/baidu/monitor/apmjs"
+    "url": ""
   },
   "keywords": [
     "apm",
     "js"
   ],
-  "author": "guoxianglin@baidu.com",
+  "author": "lyb",
   "license": "MIT",
   "devDependencies": {
     "buble": "^0.15.1",

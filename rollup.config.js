@@ -1,6 +1,6 @@
 /**
  * @file rollup 设置文件
- * @author guoxianglin@baidu.com
+ * @author lyb
  */
 
 import buble from 'rollup-plugin-buble';
