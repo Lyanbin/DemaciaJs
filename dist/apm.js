@@ -87,17 +87,19 @@ Event.prototype.remove = function remove (name, handler) {
 function stringify(data) {
     switch (typeof data) {
         case 'object':
-            if (!data) { return 'null'; }
+            if (!data) {
+                return 'null';
+            }
             if (data instanceof Array) {
-                var arrayLength = data.length,
-                    s$1 = '[';
+                var arrayLength = data.length;
+                var s$1 = '[';
                 for (var i = 0; i < arrayLength; i++) {
                     s$1 += (i > 0 ? ',' : '') + stringify(data[i]);
                 }
                 return s$1 + ']';
             }
-            var s = '{',
-                n = 0;
+            var s = '{';
+            var n = 0;
             for (var a in data) {
                 if ('function' !== typeof data[a]) {
                     var temp = stringify(data[a]);
@@ -146,7 +148,7 @@ var Report = function Report(options) {
 };
 Report.prototype.mkurl = function mkurl (options) {
     var url = /^https/i.test(document.URL) ? 'https' : 'http';
-        url += '://' + options.url + '/apminfo?appKey=' + options.appKey;
+    url += '://' + options.url + '/apminfo?appKey=' + options.appKey;
     if (arguments.length > 1) {
         var otherParamObj = arguments[1];
         for (var k in otherParamObj) {
@@ -421,6 +423,58 @@ Perf.prototype.setFirstPaintTime = function setFirstPaintTime (firstPaintTime) {
     this.timeObj.firstRequestAnimationFrameTime = firstPaintTime;
 };
 
+var Resource = function Resource() {
+    this.data = [];
+    this.dataBuffer = [];
+    var self = this;
+    this.performance = window.performance ? window.performance : window.Performance;
+    eventListener(this.performance, 'resourcetimingbufferfull', function () {
+        var tempBuffer = this.performance.getEntriesByType('resource');
+        if (tempBuffer) {
+            self.dataBuffer = self.dataBuffer.concat(tempBuffer);
+            this.performance.clearResourceTimings();
+        }
+    });
+    eventListener(this.performance, 'webkitresourcetimingbufferfull', function () {
+        var tempBuffer = this.performance.getEntriesByType('resource');
+        if (tempBuffer) {
+            self.dataBuffer = self.dataBuffer.concat(tempBuffer);
+            this.performance.webkitClearResourceTimings();
+        }
+    });
+};
+Resource.prototype.getResource = function getResource () {
+        var this$1 = this;
+    if (this.performance && this.performance.getEntriesByType) {
+        var resourceNow = this.performance.getEntriesByType('resource');
+        if (resourceNow || this.dataBuffer) {
+            resourceNow = resourceNow.concat(this.dataBuffer);
+            this.performance.webkitClearResourceTimings && this.performance.webkitClearResourceTimings();
+            this.performance.clearResourceTimings && this.performance.clearResourceTimings();
+            this.dataBuffer.length = 0;
+        }
+        var resourceNowLength = resourceNow.length;
+        for (var i = 0; i < resourceNowLength; i++) {
+            var temp = resourceNow[i];
+            var tempObj = {
+                startTime: temp.startTime > 0 ? temp.startTime :0,
+                fetchStart: temp.fetchStart > 0 ? temp.fetchStart :0,
+                domainLookupStart: temp.domainLookupStart > 0 ? temp.domainLookupStart :0,
+                domainLookupEnd: temp.domainLookupEnd > 0 ? temp.domainLookupEnd :0,
+                connectStart: temp.connectStart > 0 ? temp.connectStart :0,
+                connectEnd: temp.connectEnd > 0 ? temp.connectEnd :0,
+                secureConnectionStart: temp.secureConnectionStart > 0 ? temp.secureConnectionStart :0,
+                requestStart: temp.requestStart > 0 ? temp.requestStart :0,
+                responseStart: temp.responseStart > 0 ? temp.responseStart :0,
+                responseEnd: temp.responseEnd > 0 ? temp.responseEnd :0,
+                initiatorType: temp.initiatorType,
+                name: temp.name
+            };
+            this$1.data.push(tempObj);
+        }
+    }
+};
+
 var Apm = function Apm(options) {
     var this$1 = this;
     if ( options === void 0 ) options = {
@@ -436,6 +490,7 @@ var Apm = function Apm(options) {
             resolve(FP);
         });
     });
+    this.resource = new Resource();
     this.options = options;
     this.info = info;
     this.msg = new Msg();
