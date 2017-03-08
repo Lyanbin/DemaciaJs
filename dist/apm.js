@@ -475,6 +475,63 @@ Resource.prototype.getResource = function getResource () {
     }
 };
 
+var Error = function Error() {
+    this.getError();
+};
+Error.prototype.getError = function getError () {
+    var self = this;
+    var orgError = window.onerror;
+    window.onerror = function (msg, url, line, col, error) {
+        var newMsg = msg;
+        console.log(arguments);
+        if (error && error.stack) {
+            newMsg = self._processStackMsg(error);
+        }
+        orgError && orgError.apply(window, arguments);
+    };
+};
+Error.prototype._processStackMsg = function _processStackMsg (errObj) {
+    var stack = errObj.stack
+        .replace(/\n/gi, '')
+        .split(/\bat\b/)
+        .slice(0, 9)
+        .join('@')
+        .replace(/\?[^:]+/gi, '');
+    var msg = errObj.toString();
+    if (stack.indexOf(msg) < 0) {
+        stack = msg + '@' +stack;
+    }
+    return stack;
+};
+Error.prototype._processError = function _processError (errObj) {
+    try {
+        if (errObj.stack) {
+            var url = errObj.stack.match('https?://[^\n]+');
+            console.log(url);
+            url = url ? url[0] : '';
+            var rowCols = url.match(':(\\d+):(\\d+)');
+            if (!rowCols) {
+                rowCols = [0, 0, 0];
+            }
+            var stack = this._processStackMsg(errObj);
+            return {
+                msg: stack,
+                rowNum: rowCols[1],
+                colNum: rowCols[2],
+                target: url.replace(rowCols[0], ''),
+            };
+        } else {
+            if (errObj.name && errObj.message && errObj.description) {
+                return  {
+                    msg: JSON.stringify(errObj)
+                };
+            }
+        }
+    } catch (err) {
+        return errObj;
+    }
+};
+
 var Apm = function Apm(options) {
     var this$1 = this;
     if ( options === void 0 ) options = {
@@ -491,6 +548,7 @@ var Apm = function Apm(options) {
         });
     });
     this.resource = new Resource();
+    this.error = new Error();
     this.options = options;
     this.info = info;
     this.msg = new Msg();
