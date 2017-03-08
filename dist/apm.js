@@ -147,10 +147,12 @@ var Report = function Report(options) {
     this.baseUrl = this.mkurl(options);
 };
 Report.prototype.mkurl = function mkurl (options) {
+        var args = [], len = arguments.length - 1;
+        while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
     var url = /^https/i.test(document.URL) ? 'https' : 'http';
     url += '://' + options.url + '/apminfo?appKey=' + options.appKey;
-    if (arguments.length > 1) {
-        var otherParamObj = arguments[1];
+    if (args.length > 0) {
+        var otherParamObj = args[1];
         for (var k in otherParamObj) {
             url += '&' + k + '=' + otherParamObj[k];
         }
