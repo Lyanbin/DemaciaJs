@@ -312,7 +312,7 @@ Perf.prototype.getPerf = function getPerf () {
             loadEventStart: returnPerfTime(timing, 'loadEventStart', navigationStart),
             loadEventEnd: returnPerfTime(timing, 'loadEventEnd', navigationStart),
             unloadEventStart: returnPerfTime(timing, 'unloadEventStart', navigationStart),
-            unloadEventEnd: returnPerfTime(timing, 'unloadEventEnd', navigationStart),
+            unloadEventEnd: returnPerfTime(timing, 'unloadEventEnd', navigationStart)
         };
         if (redirectEnd - redirectStart > 0 || redirectEnd > 0) {
             this.data.redirectStart = redirectStart;
@@ -485,10 +485,17 @@ Error.prototype.getError = function getError () {
     var orgError = window.onerror;
     window.onerror = function (msg, url, line, col, error) {
         var newMsg = msg;
-        console.log(arguments);
         if (error && error.stack) {
             newMsg = self._processStackMsg(error);
         }
+        var tempErrorObj = {
+            msg: newMsg,
+            target: url,
+            rowNum: line,
+            colNum: col,
+            time: Date.now()
+        };
+        console.log(tempErrorObj);
         orgError && orgError.apply(window, arguments);
     };
 };
@@ -520,7 +527,7 @@ Error.prototype._processError = function _processError (errObj) {
                 msg: stack,
                 rowNum: rowCols[1],
                 colNum: rowCols[2],
-                target: url.replace(rowCols[0], ''),
+                target: url.replace(rowCols[0], '')
             };
         } else {
             if (errObj.name && errObj.message && errObj.description) {
@@ -543,7 +550,7 @@ var Apm = function Apm(options) {
 };
     console.log(123+'begin');
     var BEGINTIME = Date.now();
-    var raf = new Promise(function (resolve, reject) {
+    var raf = new Promise(function (resolve) {
         requestAnimationFrame(function () {
             var FP = Date.now();
             resolve(FP);
@@ -566,7 +573,7 @@ var Apm = function Apm(options) {
     this.report = new Report();
     var self = this;
     this.perf = new Perf({
-        beginTime: BEGINTIME,
+        beginTime: BEGINTIME
     });
     this.perf.getFirstScreenTime();
     eventListener(window, 'DOMContentLoaded', function () {
@@ -596,7 +603,7 @@ var Apm = function Apm(options) {
         });
     });
 };
-var apm = new Apm();
+new Apm();
 
 return Apm;
 
