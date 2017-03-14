@@ -1,9 +1,10 @@
 var path = require('path');
+var htmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = function () {
     return {
         entry: {
-            'index': './lib/index.js'
+            'index': ['./lib/index.js']
         },
         output: {
             path: path.join(__dirname, 'dist'),
@@ -22,7 +23,12 @@ module.exports = function () {
                 }
             ]
         },
-        plugins: [],
+        plugins: [new htmlWebpackPlugin({
+            filename: 'page/index.html',
+            title: 'This is DemaciaJs test page!',
+            template: 'template/index.ejs',
+            inject: 'head'
+        })],
 
-    }
-}
+    };
+};
