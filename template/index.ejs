@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title><%= htmlWebpackPlugin.options.title %></title>
+    </head>
+    <body>
+        <h1>我是一个占位符，来自webpack</h1>
+        <h2>我是一个占位符，来自webpack</h2>
+        <h3>我是一个占位符，来自webpack</h3>
+        <h4>我是一个占位符，来自webpack</h4>
+        <input type="file" id="file">
+        <button type="button" id="test">test</button>
+        <button type="button" id="notdefined">notdefined</button>
+        <button type="button" id="stackoverflow">stackoverflow</button>
+        <button type="button" id="setStorage">setStorage</button>
+        <button type="button" id="showStorage">showStorage</button>
+        <button type="button" id="clearStorage">clearStorage</button>
+        <button type="button" id="sendRequest1">sendRequest1</button>
+        <button type="button" id="sendRequest2">上传</button>
+        <img src="https://content.nike.com/content/dam/one-nike/en_lu/SP17/Launch/March/AIR-JORDAN-15-RETRO-OBSIDIAN-TOP.jpg.transform/default/AIR-JORDAN-15-RETRO-OBSIDIAN-TOP.jpg">
+        <img src="https://content.nike.com/content/dam/one-nike/en_us/season-2016-ho/SHOP/LAUNCH/AIR-JORDAN-3-RETRO-OG-WHITE-CEMENT-GREY-BLUE/AIR-JORDAN-3-RETRO-OG-WHITE-CEMENT-GREY-BLUE-MAIN.jpg.transform/default/AIR-JORDAN-3-RETRO-OG-WHITE-CEMENT-GREY-BLUE-MAIN.jpg">
+        <img src="https://content.nike.com/content/dam/one-nike/en_us/season-2016-ho/SHOP/LAUNCH/AIR-JORDAN-3-RETRO-BLACK-WHITE/WE-CEE-GE/AIR-JORDAN-3-RETRO-BLACK-WHITE-MAIN.jpg.transform/default/AIR-JORDAN-3-RETRO-BLACK-WHITE-MAIN.jpg">
+        <div id="background">123123</div>
+        <script type="text/javascript">
+            console.log('body');
+            var start = Date.now();
+            while (Date.now() - start < 1500) {}
+
+            var sendRequest1 = document.querySelector('#sendRequest1');
+            sendRequest1.addEventListener('click', function () {
+                var xhr = new XMLHttpRequest();
+                xhr.open('get', 'https://api.github.com/users/Lyanbin', true);
+                xhr.addEventListener('load', function () {
+                    console.log('lyb api has done');
+                });
+                xhr.send();
+            });
+
+            var sendRequest2 = document.querySelector('#sendRequest2');
+            sendRequest2.addEventListener('click', function () {
+                var xhr = new XMLHttpRequest();
+                xhr.open('post', 'http://127.0.0.1:3000/apmpost', true);
+                xhr.addEventListener('load', function () {
+                    console.log('request2 done');
+                });
+
+                xhr.setRequestHeader('Content-Type', 'text/plain;charset=UTF-8');
+                // xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
+                var file = document.querySelector('#file').value;
+                // var data = {
+                //     data: file,
+                //     num: 1,
+                // };
+                var data = JSON.stringify({a: 1});
+                xhr.send(data);
+            });
+
+            var clearStorage = document.querySelector('#clearStorage');
+                clearStorage.addEventListener('click', function () {
+                window.localStorage.clear();
+            });
+
+            var showStorage = document.querySelector('#showStorage');
+                showStorage.addEventListener('click', function () {
+                alert(JSON.stringify(window.localStorage));
+            });
+
+            var setStorage = document.querySelector('#setStorage');
+                setStorage.addEventListener('click', function () {
+                window.localStorage.setItem('a', '23123123');
+            });
+
+            var btnNotdefined = document.querySelector('#notdefined');
+                btnNotdefined.addEventListener('click', function () {
+                // 强制报错用来捕获
+                console.log(asd);
+            });
+
+            var btnStackoverflow = document.querySelector('#stackoverflow');
+                btnStackoverflow.addEventListener('click', function () {
+                var recurse = function () {
+                    recurse();
+                };
+                recurse();
+            });
+
+            console.log('body bottom');
+            var a = function () {
+                console.log(asd);
+            };
+            a();
+        </script>
+    </body>
+</html>
