@@ -1141,12 +1141,19 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _utils = __webpack_require__(0);
 
+var _report = __webpack_require__(1);
+
+var _report2 = _interopRequireDefault(_report);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Resource = function () {
     function Resource() {
         _classCallCheck(this, Resource);
 
+        this.report = new _report2.default();
         this.data = [];
         // 当resource满了，需要压入这个buffer中去待处理
         this.dataBuffer = [];
@@ -1165,6 +1172,9 @@ var Resource = function () {
                 self.dataBuffer = self.dataBuffer.concat(tempBuffer);
                 this.performance.webkitClearResourceTimings();
             }
+        });
+        (0, _utils.eventListener)(window, 'unload', function () {
+            self.report.post(self.dataBuffer);
         });
     }
 
