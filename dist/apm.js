@@ -426,6 +426,7 @@ Perf.prototype.setFirstPaintTime = function setFirstPaintTime (firstPaintTime) {
 };
 
 var Resource = function Resource() {
+    this.Report = new Report();
     this.data = [];
     this.dataBuffer = [];
     var self = this;
@@ -444,12 +445,15 @@ var Resource = function Resource() {
             this.performance.webkitClearResourceTimings();
         }
     });
+    eventListener(window, 'beforeunload', function () {
+        self.Report.post(self.getResource());
+    });
 };
 Resource.prototype.getResource = function getResource () {
         var this$1 = this;
     if (this.performance && this.performance.getEntriesByType) {
         var resourceNow = this.performance.getEntriesByType('resource');
-        if (resourceNow || this.dataBuffer) {
+        if (resourceNow && this.dataBuffer) {
             resourceNow = resourceNow.concat(this.dataBuffer);
             this.performance.webkitClearResourceTimings && this.performance.webkitClearResourceTimings();
             this.performance.clearResourceTimings && this.performance.clearResourceTimings();
@@ -474,6 +478,7 @@ Resource.prototype.getResource = function getResource () {
             };
             this$1.data.push(tempObj);
         }
+        return this.data;
     }
 };
 
