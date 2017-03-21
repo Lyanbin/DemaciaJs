@@ -459,16 +459,16 @@ Resource.prototype.getResource = function getResource () {
         for (var i = 0; i < resourceNowLength; i++) {
             var temp = resourceNow[i];
             var tempObj = {
-                startTime: temp.startTime > 0 ? temp.startTime :0,
-                fetchStart: temp.fetchStart > 0 ? temp.fetchStart :0,
-                domainLookupStart: temp.domainLookupStart > 0 ? temp.domainLookupStart :0,
-                domainLookupEnd: temp.domainLookupEnd > 0 ? temp.domainLookupEnd :0,
-                connectStart: temp.connectStart > 0 ? temp.connectStart :0,
-                connectEnd: temp.connectEnd > 0 ? temp.connectEnd :0,
-                secureConnectionStart: temp.secureConnectionStart > 0 ? temp.secureConnectionStart :0,
-                requestStart: temp.requestStart > 0 ? temp.requestStart :0,
-                responseStart: temp.responseStart > 0 ? temp.responseStart :0,
-                responseEnd: temp.responseEnd > 0 ? temp.responseEnd :0,
+                startTime: temp.startTime > 0 ? temp.startTime : 0,
+                fetchStart: temp.fetchStart > 0 ? temp.fetchStart : 0,
+                domainLookupStart: temp.domainLookupStart > 0 ? temp.domainLookupStart : 0,
+                domainLookupEnd: temp.domainLookupEnd > 0 ? temp.domainLookupEnd : 0,
+                connectStart: temp.connectStart > 0 ? temp.connectStart : 0,
+                connectEnd: temp.connectEnd > 0 ? temp.connectEnd : 0,
+                secureConnectionStart: temp.secureConnectionStart > 0 ? temp.secureConnectionStart : 0,
+                requestStart: temp.requestStart > 0 ? temp.requestStart : 0,
+                responseStart: temp.responseStart > 0 ? temp.responseStart : 0,
+                responseEnd: temp.responseEnd > 0 ? temp.responseEnd : 0,
                 initiatorType: temp.initiatorType,
                 name: temp.name
             };
@@ -479,11 +479,19 @@ Resource.prototype.getResource = function getResource () {
 
 var Error = function Error() {
     this.getError();
+    this.Report = new Report();
 };
 Error.prototype.getError = function getError () {
     var self = this;
     var orgError = window.onerror;
-    window.onerror = function (msg, url, line, col, error) {
+    window.onerror = function () {
+            var args = [], len = arguments.length;
+            while ( len-- ) args[ len ] = arguments[ len ];
+        var msg = args[0];
+        var url = args[1];
+        var line = args[2];
+        var col = args[3];
+        var error = args[4];
         var newMsg = msg;
         if (error && error.stack) {
             newMsg = self._processStackMsg(error);
@@ -495,8 +503,8 @@ Error.prototype.getError = function getError () {
             colNum: col,
             time: Date.now()
         };
-        console.log(tempErrorObj);
-        orgError && orgError.apply(window, arguments);
+        self.Report.post(tempErrorObj);
+        orgError && orgError.apply(window, args);
     };
 };
 Error.prototype._processStackMsg = function _processStackMsg (errObj) {
@@ -508,7 +516,7 @@ Error.prototype._processStackMsg = function _processStackMsg (errObj) {
         .replace(/\?[^:]+/gi, '');
     var msg = errObj.toString();
     if (stack.indexOf(msg) < 0) {
-        stack = msg + '@' +stack;
+        stack = msg + '@' + stack;
     }
     return stack;
 };

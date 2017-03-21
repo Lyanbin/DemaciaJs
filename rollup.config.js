@@ -7,7 +7,7 @@ import buble from 'rollup-plugin-buble';
 import uglify from 'rollup-plugin-uglify';
 import filesize from 'rollup-plugin-filesize';
 import alias from 'rollup-plugin-alias';
-import eslint from 'rollup-plugin-eslint';
+// import eslint from 'rollup-plugin-eslint';
 import cleanup from 'rollup-plugin-cleanup';
 
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -19,7 +19,7 @@ const config = {
     moduleName: 'Apm',
     sourceMap: false,
     plugins: [
-        eslint(),
+        // eslint(),
         buble(),
         alias(),
         filesize(),
