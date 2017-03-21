@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 9);
+/******/ 	return __webpack_require__(__webpack_require__.s = 10);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -392,6 +392,153 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _info = __webpack_require__(5);
+
+var _info2 = _interopRequireDefault(_info);
+
+var _msg = __webpack_require__(6);
+
+var _msg2 = _interopRequireDefault(_msg);
+
+var _xhr = __webpack_require__(9);
+
+var _xhr2 = _interopRequireDefault(_xhr);
+
+var _perf = __webpack_require__(7);
+
+var _perf2 = _interopRequireDefault(_perf);
+
+var _report = __webpack_require__(1);
+
+var _report2 = _interopRequireDefault(_report);
+
+var _resource = __webpack_require__(8);
+
+var _resource2 = _interopRequireDefault(_resource);
+
+var _error = __webpack_require__(3);
+
+var _error2 = _interopRequireDefault(_error);
+
+var _utils = __webpack_require__(0);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } } /**
+                                                                                                                                                           * @file 程序入口
+                                                                                                                                                           * @author lyb
+                                                                                                                                                           */
+
+
+var Apm = function Apm() {
+    var _this = this;
+
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {
+        // 这里需要根据宿主本身的协议来选择是http还是https
+        url: '127.0.0.1:3000',
+        appKey: 'powerbylyb',
+        isWebview: false
+    };
+
+    _classCallCheck(this, Apm);
+
+    console.log(123 + 'begin');
+    // 进入该脚本时间
+    var BEGINTIME = Date.now();
+    // 白屏时间定位
+    var raf = new Promise(function (resolve) {
+        requestAnimationFrame(function () {
+            var FP = Date.now();
+            resolve(FP);
+        });
+    });
+    this.resource = new _resource2.default();
+    this.error = new _error2.default();
+    // 自定义设置
+    this.options = options;
+    // 浏览器信息
+    this.info = _info2.default;
+    // 消息栈
+    this.msg = new _msg2.default();
+    // ajax消息栈, 貌似没啥卵用
+    this.ajaxMsg = new _msg2.default();
+    // default src
+    console.log('options');
+    console.log(options);
+    // this.src = this.options.url + '/apmget?' + `appKey=${this.options.appKey}&`;
+    // 拦截ajax请求
+    this.xhr = new _xhr2.default();
+    this.xhr.on('xhr_done', function (payload) {
+        var _ajaxMsg;
+
+        // NOTE: 这里得去重，或者重新写一个事件
+        console.log(payload);
+        (_ajaxMsg = _this.ajaxMsg).push.apply(_ajaxMsg, _toConsumableArray(payload.map(function (e) {
+            return JSON.stringify(e);
+        })));
+        // this.report(payload);
+    });
+    this.report = new _report2.default();
+
+    var self = this;
+
+    this.perf = new _perf2.default({
+        beginTime: BEGINTIME
+    });
+
+    this.perf.getFirstScreenTime();
+
+    (0, _utils.eventListener)(window, 'DOMContentLoaded', function () {
+        var DOMREADYTIME = Date.now();
+        // domready时间塞入对象
+        self.perf.setDomReadyTime(DOMREADYTIME);
+        // 查询图片个数，没图片则直接让首屏时间为dom加载完成时间
+        var imgs = document.querySelectorAll('img');
+        if (!imgs.length) {
+            self.perf.firstScreenObj.isFindLastImg = true;
+            console.log('imgs.length is DomReady' + imgs.length);
+        }
+    });
+
+    (0, _utils.eventListener)(window, 'load', function () {
+        var ONLOADTIME = Date.now();
+        // onload时间塞入对象
+        self.perf.setOnLoadTime(ONLOADTIME);
+        // load后如果轮训还没结束，则强行结束
+        self.perf.firstScreenObj.allImgLoaded = true;
+        self.perf.firstScreenObj.isFindLastImg = true;
+        if (self.perf.firstScreenObj.t && self.perf.firstScreenObj.intervalFlag) {
+            self.perf.firstScreenObj.firstScreenTime = Date.now();
+            clearInterval(self.perf.firstScreenObj.t);
+            console.log('imgs.length is onloaded，外部结束循环');
+        }
+        //白屏时间捕获
+        raf.then(function (fp) {
+            self.perf.setFirstPaintTime(fp);
+            var perfData = self.perf.getPerf();
+            console.log(perfData);
+            self.report.get(perfData);
+        });
+    });
+};
+
+exports.default = Apm;
+
+new Apm();
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -412,7 +559,17 @@ var Error = function () {
         value: function getError() {
             var self = this;
             var orgError = window.onerror;
-            window.onerror = function (msg, url, line, col, error) {
+            // window.onerror = function (msg, url, line, col, error) {
+            window.onerror = function () {
+                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                    args[_key] = arguments[_key];
+                }
+
+                var msg = args[0];
+                var url = args[1];
+                var line = args[2];
+                var col = args[3];
+                var error = args[4];
                 var newMsg = msg;
                 if (error && error.stack) {
                     newMsg = self._processStackMsg(error);
@@ -427,7 +584,7 @@ var Error = function () {
                 };
 
                 console.log(tempErrorObj);
-                orgError && orgError.apply(window, arguments);
+                orgError && orgError.apply(window, args);
             };
         }
     }, {
@@ -481,7 +638,71 @@ var Error = function () {
 exports.default = Error;
 
 /***/ }),
-/* 3 */
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * @file 事件父类
+ *
+ */
+var Event = function () {
+    function Event() {
+        _classCallCheck(this, Event);
+
+        this.handlers = {};
+    }
+
+    _createClass(Event, [{
+        key: "on",
+        value: function on(name, handler) {
+            if (!(this.handlers[name] instanceof Array)) {
+                this.handlers[name] = [];
+            }
+            this.handlers[name].push(handler);
+        }
+    }, {
+        key: "emit",
+        value: function emit(name, payload) {
+            if (this.handlers[name] instanceof Array) {
+                this.handlers[name].forEach(function (cb) {
+                    cb(payload);
+                });
+            }
+        }
+    }, {
+        key: "remove",
+        value: function remove(name, handler) {
+            var _this = this;
+
+            if (this.handlers[name] instanceof Array) {
+                this.handlers[name].forEach(function (e, i) {
+                    if (e === handler) {
+                        _this.handlers[name].splice(i, 1);
+                        return false;
+                    }
+                });
+            }
+        }
+    }]);
+
+    return Event;
+}();
+
+exports.default = Event;
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -563,7 +784,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -669,7 +890,7 @@ var Msg = function () {
 exports.default = Msg;
 
 /***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -902,7 +1123,7 @@ var Perf = function () {
 exports.default = Perf;
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -992,7 +1213,7 @@ var Resource = function () {
 exports.default = Resource;
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1004,7 +1225,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _event = __webpack_require__(8);
+var _event = __webpack_require__(4);
 
 var _event2 = _interopRequireDefault(_event);
 
@@ -1144,215 +1365,11 @@ var Xhr = function (_Event) {
 exports.default = Xhr;
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
+module.exports = __webpack_require__(2);
 
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-/**
- * @file 事件父类
- *
- */
-var Event = function () {
-    function Event() {
-        _classCallCheck(this, Event);
-
-        this.handlers = {};
-    }
-
-    _createClass(Event, [{
-        key: "on",
-        value: function on(name, handler) {
-            if (!(this.handlers[name] instanceof Array)) {
-                this.handlers[name] = [];
-            }
-            this.handlers[name].push(handler);
-        }
-    }, {
-        key: "emit",
-        value: function emit(name, payload) {
-            if (this.handlers[name] instanceof Array) {
-                this.handlers[name].forEach(function (cb) {
-                    cb(payload);
-                });
-            }
-        }
-    }, {
-        key: "remove",
-        value: function remove(name, handler) {
-            var _this = this;
-
-            if (this.handlers[name] instanceof Array) {
-                this.handlers[name].forEach(function (e, i) {
-                    if (e === handler) {
-                        _this.handlers[name].splice(i, 1);
-                        return false;
-                    }
-                });
-            }
-        }
-    }]);
-
-    return Event;
-}();
-
-exports.default = Event;
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _info = __webpack_require__(3);
-
-var _info2 = _interopRequireDefault(_info);
-
-var _msg = __webpack_require__(4);
-
-var _msg2 = _interopRequireDefault(_msg);
-
-var _xhr = __webpack_require__(7);
-
-var _xhr2 = _interopRequireDefault(_xhr);
-
-var _perf = __webpack_require__(5);
-
-var _perf2 = _interopRequireDefault(_perf);
-
-var _report = __webpack_require__(1);
-
-var _report2 = _interopRequireDefault(_report);
-
-var _resource = __webpack_require__(6);
-
-var _resource2 = _interopRequireDefault(_resource);
-
-var _error = __webpack_require__(2);
-
-var _error2 = _interopRequireDefault(_error);
-
-var _utils = __webpack_require__(0);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } } /**
-                                                                                                                                                           * @file 程序入口
-                                                                                                                                                           * @author lyb
-                                                                                                                                                           */
-
-
-var Apm = function Apm() {
-    var _this = this;
-
-    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {
-        // 这里需要根据宿主本身的协议来选择是http还是https
-        url: '127.0.0.1:3000',
-        appKey: 'powerbylyb',
-        isWebview: false
-    };
-
-    _classCallCheck(this, Apm);
-
-    console.log(123 + 'begin');
-    // 进入该脚本时间
-    var BEGINTIME = Date.now();
-    // 白屏时间定位
-    var raf = new Promise(function (resolve) {
-        requestAnimationFrame(function () {
-            var FP = Date.now();
-            resolve(FP);
-        });
-    });
-    this.resource = new _resource2.default();
-    this.error = new _error2.default();
-    // 自定义设置
-    this.options = options;
-    // 浏览器信息
-    this.info = _info2.default;
-    // 消息栈
-    this.msg = new _msg2.default();
-    // ajax消息栈, 貌似没啥卵用
-    this.ajaxMsg = new _msg2.default();
-    // default src
-    console.log('options');
-    console.log(options);
-    // this.src = this.options.url + '/apmget?' + `appKey=${this.options.appKey}&`;
-    // 拦截ajax请求
-    this.xhr = new _xhr2.default();
-    this.xhr.on('xhr_done', function (payload) {
-        var _ajaxMsg;
-
-        // NOTE: 这里得去重，或者重新写一个事件
-        console.log(payload);
-        (_ajaxMsg = _this.ajaxMsg).push.apply(_ajaxMsg, _toConsumableArray(payload.map(function (e) {
-            return JSON.stringify(e);
-        })));
-        // this.report(payload);
-    });
-    this.report = new _report2.default();
-
-    var self = this;
-
-    this.perf = new _perf2.default({
-        beginTime: BEGINTIME
-    });
-
-    this.perf.getFirstScreenTime();
-
-    (0, _utils.eventListener)(window, 'DOMContentLoaded', function () {
-        var DOMREADYTIME = Date.now();
-        // domready时间塞入对象
-        self.perf.setDomReadyTime(DOMREADYTIME);
-        // 查询图片个数，没图片则直接让首屏时间为dom加载完成时间
-        var imgs = document.querySelectorAll('img');
-        if (!imgs.length) {
-            self.perf.firstScreenObj.isFindLastImg = true;
-            console.log('imgs.length is DomReady' + imgs.length);
-        }
-    });
-
-    (0, _utils.eventListener)(window, 'load', function () {
-        var ONLOADTIME = Date.now();
-        // onload时间塞入对象
-        self.perf.setOnLoadTime(ONLOADTIME);
-        // load后如果轮训还没结束，则强行结束
-        self.perf.firstScreenObj.allImgLoaded = true;
-        self.perf.firstScreenObj.isFindLastImg = true;
-        if (self.perf.firstScreenObj.t && self.perf.firstScreenObj.intervalFlag) {
-            self.perf.firstScreenObj.firstScreenTime = Date.now();
-            clearInterval(self.perf.firstScreenObj.t);
-            console.log('imgs.length is onloaded，外部结束循环');
-        }
-        //白屏时间捕获
-        raf.then(function (fp) {
-            self.perf.setFirstPaintTime(fp);
-            var perfData = self.perf.getPerf();
-            console.log(perfData);
-            self.report.get(perfData);
-        });
-    });
-};
-
-exports.default = Apm;
-
-new Apm();
 
 /***/ })
 /******/ ]);
