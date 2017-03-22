@@ -205,7 +205,6 @@ var Xhr = (function (Event$$1) {
         maxNum: 5,
         maxDur: 1e4
     };
-        Event$$1.call(this);
         this.xhrOpt = xhrOpt;
         this.msg = [];
         this.lastSentTime = 0;
@@ -244,8 +243,8 @@ var Xhr = (function (Event$$1) {
                 tempData.errCode = 903;
             });
             eventListener(this, 'loadend', function () {
-                var reportXhr = new Report();
-                var reg = new RegExp(reportXhr.options.url, 'i');
+                console.log();
+                var reg = new RegExp(self.report.options.url, 'i');
                 if (!reg.test(tempData.url)) {
                     self.msg.push(tempData);
                     console.log(self.msg);
@@ -254,7 +253,7 @@ var Xhr = (function (Event$$1) {
                 }
                 if (self.msg.length > 0 && (Date.now() - self.lastSentTime > self.xhrOpt.maxDur || self.msg.length > self.xhrOpt.maxNum)) {
                     console.log(self.msg.length);
-                    reportXhr.post(self.msg, {}, function () {
+                    self.report.post(self.msg, {}, function () {
                         self.msg.length = 0;
                     });
                     self.lastSentTime = Date.now();
@@ -266,6 +265,13 @@ var Xhr = (function (Event$$1) {
             tempData.requestSize = self.dataSize(data);
             send.call(this, data);
         };
+        eventListener(window, 'beforeunload', function () {
+            if (self.msg.length !== 0) {
+                self.report.post(self.msg, {}, function () {
+                    self.msg.length = 0;
+                });
+            }
+        });
     }
     if ( Event$$1 ) Xhr.__proto__ = Event$$1;
     Xhr.prototype = Object.create( Event$$1 && Event$$1.prototype );
@@ -555,7 +561,6 @@ Error.prototype._processError = function _processError (errObj) {
 };
 
 var Apm = function Apm(options) {
-    var this$1 = this;
     if ( options === void 0 ) options = {
     url: '127.0.0.1:3000',
     appKey: 'powerbylyb',
@@ -578,11 +583,6 @@ var Apm = function Apm(options) {
     console.log('options');
     console.log(options);
     this.xhr = new Xhr();
-    this.xhr.on('xhr_done', function (payload) {
-        console.log(payload);
-        (ref = this$1.ajaxMsg).push.apply(ref, payload.map(function (e) { return JSON.stringify(e); }));
-        var ref;
-    });
     this.report = new Report();
     var self = this;
     this.perf = new Perf({
