@@ -243,7 +243,6 @@ var Xhr = (function (Event$$1) {
                 tempData.errCode = 903;
             });
             eventListener(this, 'loadend', function () {
-                console.log();
                 var reg = new RegExp(self.report.options.url, 'i');
                 if (!reg.test(tempData.url)) {
                     self.msg.push(tempData);
@@ -252,7 +251,6 @@ var Xhr = (function (Event$$1) {
                     console.log('没进来');
                 }
                 if (self.msg.length > 0 && (Date.now() - self.lastSentTime > self.xhrOpt.maxDur || self.msg.length > self.xhrOpt.maxNum)) {
-                    console.log(self.msg.length);
                     self.report.post(self.msg, {}, function () {
                         self.msg.length = 0;
                     });
