@@ -248,7 +248,7 @@ var Xhr = (function (Event$$1) {
                     self.msg.push(tempData);
                     console.log(self.msg);
                 } else {
-                    console.log('没进来');
+                    console.log('别开枪，自己人');
                 }
                 if (self.msg.length > 0 && (Date.now() - self.lastSentTime > self.xhrOpt.maxDur || self.msg.length > self.xhrOpt.maxNum)) {
                     self.report.post(self.msg, {}, function () {
